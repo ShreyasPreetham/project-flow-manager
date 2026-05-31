@@ -8,8 +8,8 @@ A full-stack task management application with a Kanban-style board (To Do / In P
 
 | Layer    | URL                                |
 |----------|------------------------------------|
-| Frontend | *(deploy to Vercel - link here)*   |
-| Backend  | *(deploy to Render - link here)*   |
+| Frontend | https://project-flow-manager.vercel.app |
+| Backend  | https://project-flow-manager.onrender.com |
 
 ---
 
@@ -33,6 +33,7 @@ A full-stack task management application with a Kanban-style board (To Do / In P
 - Task management - Nested task CRUD under project boards
 - Kanban board - Three stages: To Do, In Progress, Done
 - Task fields - Title, Description, Assignee (required), Priority, Due Date (required)
+- Email rule - Registration accepts only lowercase Gmail addresses ending with `@gmail.com`
 - Per-user isolation - Each user sees only their own data
 - Loading and error states - Skeleton loaders, inline error banners, delete confirmation
 - Responsive UI - Mobile, tablet, desktop support
@@ -175,7 +176,7 @@ Login request body:
 
 ```json
 {
-  "email": "john@example.com",
+  "email": "john@gmail.com",
   "password": "securepass123"
 }
 ```
@@ -184,7 +185,7 @@ Login/Register response:
 
 ```json
 {
-  "user": { "id": 1, "username": "john", "email": "john@example.com" },
+  "user": { "id": 1, "username": "john", "email": "john@gmail.com" },
   "access": "<jwt_access_token>",
   "refresh": "<jwt_refresh_token>"
 }
@@ -216,7 +217,7 @@ Task object example:
   "id": 1,
   "title": "Design the homepage",
   "description": "Create wireframes and mockups",
-  "assignee": "john@example.com",
+  "assignee": "john@gmail.com",
   "stage": "In Progress",
   "priority": "Medium",
   "due_date": "2026-06-03",
@@ -239,6 +240,12 @@ Required task fields in current app flow:
 - `priority`
 - `due_date`
 
+Email validation in current app flow:
+
+- Must be a valid email format
+- Domain must be exactly `gmail.com`
+- Email is normalized to lowercase
+
 ---
 
 ## Deployment
@@ -251,7 +258,7 @@ Required task fields in current app flow:
 4. Set env var:
 
 ```env
-VITE_API_BASE_URL=https://your-render-backend.onrender.com/api
+VITE_API_BASE_URL=https://project-flow-manager.onrender.com/api
 ```
 
 ### Backend -> Render
