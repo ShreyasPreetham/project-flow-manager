@@ -42,17 +42,36 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    const normalized = name === "email" ? value.toLowerCase() : value;
+    setForm((prev) => ({ ...prev, [name]: normalized }));
     // Clear field-level error on change
-    setErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   /** Client-side validation before hitting the API */
   const validate = () => {
     const errs = {};
     if (!form.username.trim()) errs.username = "Name is required.";
-    if (!form.email.trim()) errs.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Enter a valid email.";
+    if (!form.email.trim()) {
+      errs.email = "Email is required.";
+    } else {
+      const email = form.email.trim().toLowerCase();
+      if ((email.match(/@/g) || []).length !== 1) {
+        errs.email = "Enter a valid email.";
+      } else {
+        const [local, domain] = email.split("@");
+        const localRe = /^[a-z0-9._%+-]+$/;
+        const valid = localRe.test(local) && domain === "gmail.com";
+
+        if (!valid) {
+          errs.email = "Email must end with @gmail.com.";
+        }
+      }
+      if (errs.email) {
+        errs.email = errs.email || "Enter a valid email.";
+      }
+    }
     if (!form.password) errs.password = "Password is required.";
     else if (form.password.length < 8) errs.password = "Password must be at least 8 characters.";
     if (form.password !== form.password2) errs.password2 = "Passwords do not match.";

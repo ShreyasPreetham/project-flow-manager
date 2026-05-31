@@ -35,6 +35,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Passwords do not match."})
         return attrs
 
+    def validate_email(self, value):
+        email = (value or "").strip().lower()
+        if email.count("@") != 1:
+            raise serializers.ValidationError("Enter a valid email address.")
+        local, domain = email.split("@", 1)
+
+        # Strict local-part: common safe chars only.
+        if not re.fullmatch(r"[a-z0-9._%+-]+", local):
+            raise serializers.ValidationError("Enter a valid email address.")
+
+        # Project rule: only gmail.com addresses are accepted.
+        if domain != "gmail.com":
+            raise serializers.ValidationError("Email must end with @gmail.com.")
+
+        return email
+
     def create(self, validated_data):
         validated_data.pop("password2")
         raw_username = (validated_data.get("username") or "").strip()

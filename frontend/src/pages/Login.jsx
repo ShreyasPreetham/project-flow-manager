@@ -10,8 +10,11 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const normalized = name === "email" ? value.toLowerCase() : value;
+    setForm((prev) => ({ ...prev, [name]: normalized }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
