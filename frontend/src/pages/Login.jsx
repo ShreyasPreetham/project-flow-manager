@@ -10,6 +10,9 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isPlainObject = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     const normalized = name === "email" ? value.toLowerCase() : value;
@@ -30,8 +33,9 @@ export default function Login() {
       await login(form);
       navigate("/dashboard");
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setError(detail || "Invalid credentials. Please try again.");
+      const data = err.response?.data;
+      const detail = isPlainObject(data) ? data.detail : null;
+      setError(detail || "Unable to reach the backend or the server returned an error.");
     } finally {
       setLoading(false);
     }

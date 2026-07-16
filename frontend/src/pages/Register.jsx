@@ -41,6 +41,9 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const isPlainObject = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     const normalized = name === "email" ? value.toLowerCase() : value;
@@ -91,13 +94,20 @@ export default function Register() {
       await register(form);
       navigate("/dashboard");
     } catch (err) {
-      // Map Django field errors back to the form
-      const data = err.response?.data || {};
-      const mapped = {};
-      Object.entries(data).forEach(([key, val]) => {
-        mapped[key] = Array.isArray(val) ? val.join(" ") : val;
-      });
-      setErrors(mapped);
+      const data = err.response?.data;
+      // Map Django field errors back to the form when the backend returns JSON.
+      if (isPlainObject(data)) {
+        const mapped = {};
+        Object.entries(data).forEach(([key, val]) => {
+          mapped[key] = Array.isArray(val) ? val.join(" ") : val;
+        });
+        setErrors(mapped);
+      } else {
+        setErrors({
+          non_field_errors:
+            "Unable to reach the backend or the server returned an unexpected error. Please check the deploy logs.",
+        });
+      }
     } finally {
       setLoading(false);
     }

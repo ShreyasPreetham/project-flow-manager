@@ -8,10 +8,16 @@ from decouple import config, Csv
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:5173")
+
+
+def env_bool(name, default=False):
+    value = config(name, default=str(default), cast=str).strip().lower()
+    return value in {"1", "true", "yes", "on"}
 
 # ─── Security ────────────────────────────────────────────────────────────────
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me-in-production")
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = env_bool("DEBUG", default=True)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
 # ─── Application definition ──────────────────────────────────────────────────
@@ -64,12 +70,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
 # ─── Database ────────────────────────────────────────────────────────────────
-# Uses DATABASE_URL env var; falls back to local SQLite for quick dev setup
+# Prefer DATABASE_URL when present, but also support split Neon/Postgres variables.
 DATABASE_URL = config("DATABASE_URL", default=None)
+DB_HOST = config("DB_HOST", default="localhost")
+DB_SSLMODE = config(
+    "DB_SSLMODE",
+    default="prefer" if DB_HOST in {"localhost", "127.0.0.1"} else "require",
+)
 
 if DATABASE_URL:
     import dj_database_url  # type: ignore
-    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+        )
+    }
 else:
     DATABASES = {
         "default": {
@@ -77,8 +94,9 @@ else:
             "NAME": config("DB_NAME", default="taskmanager_db"),
             "USER": config("DB_USER", default="postgres"),
             "PASSWORD": config("DB_PASSWORD", default="postgres"),
-            "HOST": config("DB_HOST", default="localhost"),
+            "HOST": DB_HOST,
             "PORT": config("DB_PORT", default="5432"),
+            "OPTIONS": {"sslmode": DB_SSLMODE},
         }
     }
 
@@ -125,7 +143,23 @@ SIMPLE_JWT = {
 # ─── CORS ────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
+    default=f"{FRONTEND_URL},http://localhost:5173,http://127.0.0.1:5173",
     cast=Csv(),
 )
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default=FRONTEND_URL,
+    cast=Csv(),
+)
+
+# ─── Email (Gmail SMTP) ───────────────────────────────────────────────────────
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER", default="noreply@projectflow.app")
+
+# Frontend base URL — used in email links

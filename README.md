@@ -261,13 +261,14 @@ Email validation in current app flow:
 VITE_API_BASE_URL=https://project-flow-manager.onrender.com/api
 ```
 
-### Backend -> Render
+### Backend -> Render or Neon-backed Django
 
 1. Create new web service from GitHub repo.
 2. Set root directory to `backend`.
 3. Build command: `./build.sh`
 4. Start command: `gunicorn taskmanager.wsgi:application`
-5. Add required env vars (`SECRET_KEY`, `DEBUG`, `DATABASE_URL`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`).
+5. Add required env vars (`SECRET_KEY`, `DEBUG`, `DATABASE_URL` or `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`).
+6. If you use Neon split vars instead of `DATABASE_URL`, set `DB_SSLMODE=require`.
 
 ---
 
