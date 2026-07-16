@@ -70,15 +70,33 @@ TEMPLATES = [
 WSGI_APPLICATION = "taskmanager.wsgi.application"
 
 # ─── Database ────────────────────────────────────────────────────────────────
-# Prefer DATABASE_URL when present, but also support split Neon/Postgres variables.
+# Prefer explicit split Neon/Postgres variables when they are present.
+# This prevents an old Render DATABASE_URL from overriding the new Neon config.
+DB_NAME = config("DB_NAME", default=None)
+DB_USER = config("DB_USER", default=None)
+DB_PASSWORD = config("DB_PASSWORD", default=None)
+DB_HOST = config("DB_HOST", default=None)
 DATABASE_URL = config("DATABASE_URL", default=None)
-DB_HOST = config("DB_HOST", default="localhost")
+
+use_split_db = all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST])
 DB_SSLMODE = config(
     "DB_SSLMODE",
-    default="prefer" if DB_HOST in {"localhost", "127.0.0.1"} else "require",
+    default="prefer" if (DB_HOST or "localhost") in {"localhost", "127.0.0.1"} else "require",
 )
 
-if DATABASE_URL:
+if use_split_db:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_NAME,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": config("DB_PORT", default="5432"),
+            "OPTIONS": {"sslmode": DB_SSLMODE},
+        }
+    }
+elif DATABASE_URL:
     import dj_database_url  # type: ignore
 
     DATABASES = {
@@ -91,11 +109,11 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": config("DB_NAME", default="taskmanager_db"),
-            "USER": config("DB_USER", default="postgres"),
-            "PASSWORD": config("DB_PASSWORD", default="postgres"),
-            "HOST": DB_HOST,
-            "PORT": config("DB_PORT", default="5432"),
+            "NAME": "taskmanager_db",
+            "USER": "postgres",
+            "PASSWORD": "postgres",
+            "HOST": "localhost",
+            "PORT": "5432",
             "OPTIONS": {"sslmode": DB_SSLMODE},
         }
     }
