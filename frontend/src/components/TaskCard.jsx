@@ -20,7 +20,7 @@ function isOverdue(dateStr) {
   return new Date(dateStr) < new Date();
 }
 
-export default function TaskCard({ task, onEdit, onDelete }) {
+export default function TaskCard({ task, onEdit, onDelete, readOnly = false }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -81,21 +81,26 @@ export default function TaskCard({ task, onEdit, onDelete }) {
         </div>
       )}
 
-      {/* Actions */}
-      {!confirmDelete ? (
+      {/* Actions — hidden for read-only cards */}
+      {!readOnly && !confirmDelete && (onEdit || onDelete) && (
         <div className="flex gap-2">
-          <button onClick={onEdit}
-            className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg border border-slate-200
-                       text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition">
-            Edit
-          </button>
-          <button onClick={() => setConfirmDelete(true)}
-            className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg border border-slate-200
-                       text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
-            Delete
-          </button>
+          {onEdit && (
+            <button onClick={onEdit}
+              className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg border border-slate-200
+                         text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition">
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={() => setConfirmDelete(true)}
+              className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg border border-slate-200
+                         text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
+              Delete
+            </button>
+          )}
         </div>
-      ) : (
+      )}
+      {!readOnly && confirmDelete && (
         <div className="flex gap-2">
           <button onClick={handleDelete} disabled={deleting}
             className="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition">

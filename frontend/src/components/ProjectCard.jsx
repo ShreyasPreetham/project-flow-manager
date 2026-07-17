@@ -56,7 +56,7 @@ export default function ProjectCard({ project, onEdit, onDelete }) {
       <div className="flex items-center gap-3 mb-4 text-xs text-slate-500">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-slate-300" />
-          {project.todo_count} Todo
+          {project.todo_count} To Do
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-amber-400" />

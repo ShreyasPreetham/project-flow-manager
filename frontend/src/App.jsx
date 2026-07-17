@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import ProjectBoard from "./pages/ProjectBoard";
+import AssignedTasks from "./pages/AssignedTasks";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import OnboardingRoute from "./routes/OnboardingRoute";
 import OnboardingGuard from "./routes/OnboardingGuard";
@@ -27,7 +28,7 @@ export default function App() {
         }
       />
 
-      {/* Protected app routes — bounce to /onboarding if not done */}
+      {/* Protected app routes */}
       <Route
         path="/dashboard"
         element={
@@ -44,6 +45,16 @@ export default function App() {
           <ProtectedRoute>
             <OnboardingGuard>
               <ProjectBoard />
+            </OnboardingGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assigned"
+        element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <AssignedTasks />
             </OnboardingGuard>
           </ProtectedRoute>
         }

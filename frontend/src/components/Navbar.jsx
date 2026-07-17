@@ -1,22 +1,33 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, displayName } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [assignedCount, setAssignedCount] = useState(0);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  // Fetch assigned task count to show badge
+  useEffect(() => {
+    if (!user?.email) return;
+    api.get("/assigned-tasks/")
+      .then((res) => {
+        const pending = res.data.filter((t) => t.stage !== "Done").length;
+        setAssignedCount(pending);
+      })
+      .catch(() => {});
+  }, [user, location.pathname]); // refresh on route change
 
+  const handleLogout = () => { logout(); navigate("/login"); };
   const isActive = (path) => location.pathname === path;
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo + nav */}
+
+        {/* Logo + nav links */}
         <div className="flex items-center gap-6">
           <Link to="/dashboard" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -29,35 +40,49 @@ export default function Navbar() {
           </Link>
 
           <nav className="hidden sm:flex items-center gap-1">
-            <Link
-              to="/dashboard"
+            {/* Projects */}
+            <Link to="/dashboard"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition
                 ${isActive("/dashboard")
                   ? "bg-blue-50 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"}`}
-            >
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"}`}>
               Projects
+            </Link>
+
+            {/* Assigned to Me */}
+            <Link to="/assigned"
+              className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2
+                ${isActive("/assigned")
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"}`}>
+              My Tasks
+              {assignedCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold
+                                 bg-blue-600 text-white rounded-full leading-none">
+                  {assignedCount > 9 ? "9+" : assignedCount}
+                </span>
+              )}
             </Link>
           </nav>
         </div>
 
-        {/* User info + logout */}
+        {/* Right: user + logout */}
         <div className="flex items-center gap-3">
           {user && (
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-700 text-sm font-semibold">
-                  {user.username.charAt(0).toUpperCase()}
+                  {(displayName || user.username).charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="text-sm text-slate-600 font-medium">{user.username}</span>
+              <span className="text-sm text-slate-600 font-medium">
+                {displayName || user.username}
+              </span>
             </div>
           )}
-          <button
-            onClick={handleLogout}
+          <button onClick={handleLogout}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600
-                       hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-          >
+                       hover:text-red-600 hover:bg-red-50 rounded-lg transition">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
