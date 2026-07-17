@@ -19,3 +19,11 @@
   background-color: #cbd5e1;
   border-radius: 3px;
 }
+
+/* Hide native password reveal / password manager controls */
+.no-browser-password-ui::-ms-reveal,
+.no-browser-password-ui::-ms-clear,
+.no-browser-password-ui::-webkit-credentials-auto-fill-button,
+.no-browser-password-ui::-webkit-textfield-decoration-container {
+  display: none !important;
+}

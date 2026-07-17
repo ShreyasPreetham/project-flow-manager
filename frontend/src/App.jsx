@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import EmailVerification from "./pages/EmailVerification";
 import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
@@ -14,6 +15,7 @@ export default function App() {
     <Routes>
       {/* Public */}
       <Route path="/login"    element={<Login />} />
+      <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/register" element={<Register />} />
 
       {/* Onboarding — only for logged-in users who haven't completed it */}
