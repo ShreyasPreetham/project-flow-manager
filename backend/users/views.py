@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -10,6 +12,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .email_utils import send_email_verification_link
 from .serializers import RegisterSerializer, UserSerializer
+
+logger = logging.getLogger(__name__)
 
 
 EMAIL_VERIFICATION_SALT = "projectflow.email-verification"
@@ -47,7 +51,19 @@ class EmailVerificationRequestView(APIView):
 
         token = signing.dumps({"email": email}, salt=EMAIL_VERIFICATION_SALT)
         verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
-        send_email_verification_link(email, verify_url)
+        try:
+            send_email_verification_link(email, verify_url)
+        except Exception as exc:
+            logger.error(
+                "EmailVerificationRequestView: email delivery failed | "
+                "exc_type=%s msg=%s",
+                type(exc).__name__,
+                str(exc),
+            )
+            return Response(
+                {"detail": "Unable to send verification email. Please try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response({"detail": "Verification email sent."}, status=status.HTTP_200_OK)
 
 

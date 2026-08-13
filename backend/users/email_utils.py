@@ -6,7 +6,16 @@ from django.core.mail import send_mail
 logger = logging.getLogger(__name__)
 
 
-def send_email_verification_link(email, verify_url):
+def send_email_verification_link(email: str, verify_url: str) -> None:
+    """
+    Send the email-verification link to the given address.
+
+    Uses whatever EMAIL_BACKEND Django is configured with — Resend via
+    django-anymail in production, console backend in local dev.
+
+    Raises on failure so the calling view can catch it and return a safe
+    HTTP error without leaking credentials or crashing a Gunicorn worker.
+    """
     subject = "Verify your ProjectFlow email"
     plain_message = f"""\
 Hi,
@@ -30,16 +39,28 @@ Click the link below to verify your email address and continue to registration:
 </body>
 </html>"""
 
+    # Log safe diagnostics only — never log credentials or API keys.
+    logger.info(
+        "Attempting verification email send | backend=%s",
+        settings.EMAIL_BACKEND,
+    )
+
     try:
         send_mail(
             subject=subject,
             message=plain_message,
-            from_email=f"ProjectFlow <{settings.DEFAULT_FROM_EMAIL}>",
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             html_message=html_message,
             fail_silently=False,
         )
-        logger.info("Verification email sent to %s", email)
+        logger.info("Verification email dispatched | to=%s", email)
     except Exception as exc:
-        logger.error("Failed to send verification email to %s: %s", email, exc)
+        # Log exception type and sanitised message — never credentials.
+        logger.error(
+            "Failed to send verification email | to=%s exc_type=%s msg=%s",
+            email,
+            type(exc).__name__,
+            str(exc),
+        )
         raise

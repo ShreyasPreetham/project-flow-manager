@@ -7,3 +7,6 @@ python-decouple==3.8
 gunicorn==22.0.0
 whitenoise==6.7.0
 dj-database-url==2.1.0
+# django-anymail 10.3 is the last release supporting Django 4.2.
+# The [resend] extra pulls in the svix webhook library required by Resend.
+django-anymail[resend]==10.3

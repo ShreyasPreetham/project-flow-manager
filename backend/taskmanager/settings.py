@@ -171,13 +171,59 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv(),
 )
 
-# ─── Email (Gmail SMTP) ───────────────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER", default="noreply@projectflow.app")
+# ─── Email ───────────────────────────────────────────────────────────────────
+# Production: Resend via django-anymail (HTTPS API, port 443 — works on Render
+# free tier where SMTP ports 25/465/587 are blocked).
+# Local dev: falls back to Django's console backend so you can see emails in
+# the terminal without needing any external service or credentials.
+RESEND_API_KEY = config("RESEND_API_KEY", default="")
+
+if RESEND_API_KEY:
+    # Resend path — active whenever RESEND_API_KEY is set (production + any
+    # local environment that also sets the key).
+    INSTALLED_APPS = INSTALLED_APPS + ["anymail"]
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+    ANYMAIL = {
+        "RESEND_API_KEY": RESEND_API_KEY,
+    }
+else:
+    # Local dev / CI fallback — prints emails to stdout, no credentials needed.
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL",
+    default="ProjectFlow <onboarding@resend.dev>",
+)
 
 # Frontend base URL — used in email links
+
+# ─── Logging ─────────────────────────────────────────────────────────────────
+# Stream all WARNING+ logs (and INFO for our own apps) to stdout so they are
+# visible in Render's log viewer.  Never log credentials.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        # Our own apps — log at INFO so email diagnostics are visible.
+        "users": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "tasks": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        # Django internals at WARNING only.
+        "django": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
+}
